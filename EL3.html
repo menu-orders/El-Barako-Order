@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EL BARAKO CAFE (Est. 2024) - Wild West Saloon Ordering</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Rye (Western display), Cinzel, Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        saloon: {
+                            950: '#1c0f06',
+                            900: '#2b1704',
+                            800: '#3e2108',
+                            700: '#5c330e',
+                            600: '#8b4513',
+                            500: '#a65918',
+                        },
+                        brass: {
+                            light: '#e6c875',
+                            DEFAULT: '#d4af37',
+                            dark: '#c5832b',
+                        },
+                        parchment: {
+                            DEFAULT: '#faf3e0',
+                            dark: '#f4ead3'
+                        }
+                    },
+                    fontFamily: {
+                        rye: ['Rye', 'serif'],
+                        brand: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #faf3e0;
+            color: #2b1704;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-rye {
+            font-family: 'Rye', serif;
+        }
+        .brand-font {
+            font-family: 'Cinzel', serif;
+        }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-saloon-900 selection:text-brass-light">
+
+    <!-- TOP ANNOUNCEMENT & STORE STATUS BAR -->
+    <div id="announcement-bar" class="bg-saloon-950 text-brass-light px-4 py-2 text-xs font-medium flex flex-wrap justify-between items-center z-50 border-b-2 border-brass-dark">
+        <div class="flex items-center gap-2 mx-auto sm:mx-0 mb-1 sm:mb-0">
+            <i class="fa-solid fa-hat-cowboy text-brass"></i>
+            <span>Saloon Hotline: <strong class="text-white tracking-wide">0966 418 9662</strong></span>
+        </div>
+        <div class="flex items-center gap-3 mx-auto sm:mx-0">
+            <span id="store-status-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 bg-emerald-950 text-emerald-300 border border-emerald-800">
+                <span id="store-status-dot" class="w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400"></span>
+                <span id="store-status-text">Checking Status...</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- STORE CLOSED NOTICE BANNER -->
+    <div id="store-closed-banner" class="hidden bg-saloon-900 text-brass-light text-center py-2.5 px-4 font-medium text-xs border-b border-brass-dark">
+        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Saloon doors are closed. Please check back later or call <span class="underline font-bold text-white">0966 418 9662</span>.
+    </div>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-saloon-900 text-parchment sticky top-0 z-40 border-b-4 border-brass-dark shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-16 flex items-center justify-between">
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3 cursor-pointer py-1" onclick="switchView('menu')">
+                <div class="w-10 h-10 rounded-lg bg-brass flex items-center justify-center text-saloon-950 text-xl font-extrabold shadow-inner border border-saloon-950">
+                    <i class="fa-solid fa-star-of-david"></i>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <h1 class="font-rye text-base sm:text-lg tracking-wider text-brass-light leading-tight">EL BARAKO CAFE</h1>
+                    <span class="text-[9px] sm:text-[10px] text-brass tracking-wider uppercase font-bold block mt-0.5">Est. 2024 • Wild West Saloon</span>
+                    <p class="text-[9px] text-brass-light/70 tracking-widest uppercase font-semibold">Baler, Aurora, Philippines</p>
+                </div>
+            </div>
+
+            <!-- Navigation Actions -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="switchView('menu')" class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-parchment hover:text-brass-light hover:bg-saloon-800 font-medium text-xs transition border border-saloon-700">
+                    <i class="fa-solid fa-utensils text-brass"></i> Menu
+                </button>
+                <button onclick="switchView('tracker')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-brass-dark/60 bg-saloon-800 text-brass-light hover:bg-saloon-700 font-medium text-xs transition">
+                    <i class="fa-solid fa-magnifying-glass text-brass"></i> <span>Track Order</span>
+                </button>
+                <button onclick="openCartDrawer()" class="relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-brass text-saloon-950 hover:bg-brass-light font-bold text-xs transition shadow">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span class="hidden sm:inline">Saddle Bag</span>
+                    <span id="cart-count" class="bg-saloon-950 text-brass text-[10px] px-1.5 py-0.2 rounded-md font-extrabold">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- VIEW 1: MENU & ORDERING -->
+        <div id="view-menu" class="space-y-6">
+            <!-- Minimal Hero Banner -->
+            <div class="rounded-xl bg-saloon-900 border-2 border-brass-dark p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-parchment shadow-lg">
+                <div class="max-w-lg">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-brass block mb-1">Authentic Saloon Coffee & Fare</span>
+                    <h2 class="font-rye text-2xl sm:text-3xl text-brass-light tracking-wide">Wild West Flavors</h2>
+                    <p class="text-xs text-parchment-dark mt-1.5 leading-relaxed">Handcrafted lattes, frappes, pizzas, rice bowls, and gourmet pastas in Baler, Aurora.</p>
+                </div>
+            </div>
+
+            <!-- LAYOUT WITH SIDEBAR CATEGORIES (DESKTOP) + MENU GRID -->
+            <div class="flex flex-col lg:flex-row gap-6 items-start">
+                
+                <!-- CATEGORY SIDEBAR (Desktop) / TOP SCROLL BAR (Mobile) -->
+                <aside class="w-full lg:w-64 bg-parchment-dark rounded-xl border-2 border-saloon-600 p-4 lg:sticky lg:top-24 space-y-3 shrink-0 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-saloon-600/30 pb-2">
+                        <h3 class="font-rye text-xs uppercase tracking-wider text-saloon-900 flex items-center gap-2">
+                            <i class="fa-solid fa-list text-brass-dark"></i> Categories
+                        </h3>
+                    </div>
+
+                    <!-- Search Input inside Sidebar -->
+                    <div class="relative w-full">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-saloon-600">
+                            <i class="fa-solid fa-search text-xs"></i>
+                        </span>
+                        <input type="text" id="menu-search" oninput="filterMenu()" placeholder="Search menu..." class="w-full pl-9 pr-3 py-2 bg-parchment border border-saloon-600 rounded-lg text-xs focus:outline-none focus:border-saloon-900 transition">
+                    </div>
+
+                    <!-- Category Buttons Container -->
+                    <div id="category-tabs" class="flex lg:flex-col overflow-x-auto lg:overflow-y-auto max-h-[65vh] gap-1.5 scrollbar-none pt-1">
+                        <!-- Dynamically populated category buttons -->
+                    </div>
+                </aside>
+
+                <!-- MAIN MENU GRID -->
+                <div class="flex-1 w-full">
+                    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamically populated items -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- VIEW 2: TRACKER / ORDER STATUS LOOKUP -->
+        <div id="view-tracker" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="bg-parchment-dark rounded-xl p-6 border-2 border-saloon-600 shadow-sm">
+                <h2 class="font-rye text-xl text-saloon-950 mb-1">Track Order Status</h2>
+                <p class="text-xs text-saloon-700 mb-5">Enter your Order ID, Claim Number, or phone number.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="track-input" placeholder="e.g. EB-8821 or 09664189662" class="flex-grow px-3.5 py-2.5 bg-parchment border border-saloon-600 rounded-lg text-xs focus:outline-none focus:border-saloon-900">
+                    <button onclick="searchOrder()" class="bg-saloon-900 hover:bg-saloon-800 text-brass-light font-bold px-5 py-2.5 rounded-lg text-xs transition">
+                        Track Order
+                    </button>
+                </div>
+            </div>
+
+            <div id="tracker-results" class="space-y-4">
+                <!-- Order Status Results -->
+            </div>
+        </div>
+
+        <!-- VIEW 3: ORDER CONFIRMATION & LIVE TRACKER DETAILS -->
+        <div id="view-confirmation" class="hidden max-w-2xl mx-auto space-y-6">
+            <!-- Dynamic Confirmation & Live Tracker container -->
+        </div>
+
+    </main>
+
+    <!-- FLOATING CART BUTTON (PERSISTENT & ACCESSIBLE) -->
+    <div id="floating-cart-container" class="fixed bottom-6 right-6 z-40">
+        <button onclick="openCartDrawer()" class="bg-saloon-900 hover:bg-saloon-800 text-brass-light rounded-full p-4 sm:px-6 sm:py-3.5 shadow-2xl border-2 border-brass flex items-center gap-3 transition-all duration-300 transform hover:scale-105 active:scale-95 group">
+            <div class="relative flex items-center justify-center">
+                <i class="fa-solid fa-bag-shopping text-base sm:text-lg text-brass"></i>
+                <span id="floating-cart-count" class="absolute -top-2.5 -right-2.5 bg-brass text-saloon-950 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-saloon-900 shadow">0</span>
+            </div>
+            <div class="hidden sm:flex flex-col text-left">
+                <span class="text-[10px] uppercase tracking-wider text-brass/80 font-bold leading-none">Saddle Bag</span>
+                <span id="floating-cart-total" class="text-xs font-bold text-white leading-tight mt-0.5">₱0.00</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-brass group-hover:translate-x-0.5 transition-transform hidden sm:inline"></i>
+        </button>
+    </div>
+
+    <!-- CART SLIDE-OVER DRAWER -->
+    <div id="cart-drawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeCartDrawer()"></div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-parchment shadow-2xl flex flex-col border-l-4 border-saloon-800">
+                <!-- Drawer Header -->
+                <div class="p-5 bg-saloon-950 text-brass-light flex items-center justify-between border-b-2 border-brass-dark">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-brass"></i>
+                        <h2 class="font-rye text-lg">Your Saddle Bag</h2>
+                    </div>
+                    <button onclick="closeCartDrawer()" class="text-brass/80 hover:text-white p-2">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cart-items-container" class="flex-grow overflow-y-auto p-5 space-y-4 divide-y divide-saloon-600/20">
+                    <!-- Cart items rendered here -->
+                </div>
+
+                <!-- Cart Footer & Checkout Action -->
+                <div class="p-5 bg-parchment-dark border-t-2 border-saloon-600/30 space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-saloon-700 font-medium">Subtotal</span>
+                        <span id="cart-subtotal" class="font-bold text-saloon-950">₱0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-base font-bold">
+                        <span class="text-saloon-950">Total Amount</span>
+                        <span id="cart-total" class="text-saloon-600 text-xl font-extrabold">₱0.00</span>
+                    </div>
+                    <button id="proceed-checkout-btn" onclick="openCheckoutModal()" class="w-full bg-saloon-900 hover:bg-saloon-800 text-brass-light font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 border border-brass-dark">
+                        <span>Proceed to Checkout</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-parchment rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto border-2 border-saloon-800">
+            <button onclick="closeCheckoutModal()" class="absolute top-5 right-5 text-saloon-600 hover:text-saloon-950 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h2 class="font-rye text-2xl text-saloon-950 mb-1">Checkout Order</h2>
+            <p class="text-xs text-saloon-700 mb-6">Please provide your details to complete your order at EL BARAKO CAFE.</p>
+
+            <form id="checkout-form" onsubmit="promptOrderConfirmation(event)" class="space-y-5">
+                <!-- Customer Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-saloon-900 uppercase mb-1">Full Name *</label>
+                        <input type="text" id="cust-name" required placeholder="e.g. Juan Dela Cruz" class="w-full px-4 py-2.5 bg-white border border-saloon-600 rounded-xl text-sm focus:ring-2 focus:ring-brass focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-saloon-900 uppercase mb-1">Contact Phone Number *</label>
+                        <input type="tel" id="cust-phone" required placeholder="e.g. 09664189662" class="w-full px-4 py-2.5 bg-white border border-saloon-600 rounded-xl text-sm focus:ring-2 focus:ring-brass focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Order Type Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-saloon-900 uppercase mb-2">Order Type *</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="border border-saloon-600 rounded-xl p-3 text-center cursor-pointer hover:border-brass has-[:checked]:border-brass has-[:checked]:bg-parchment-dark transition">
+                            <input type="radio" name="order_type" value="Dine-in" onchange="handleOrderTypeChange('Dine-in')" required class="sr-only">
+                            <i class="fa-solid fa-utensils text-saloon-600 mb-1 block text-lg"></i>
+                            <span class="text-xs font-bold text-saloon-950">Dine-in</span>
+                        </label>
+                        <label id="option-takeout-label" class="border border-saloon-600 rounded-xl p-3 text-center cursor-pointer hover:border-brass has-[:checked]:border-brass has-[:checked]:bg-parchment-dark transition relative">
+                            <input type="radio" id="radio-takeout" name="order_type" value="Take-out" onchange="handleOrderTypeChange('Take-out')" required class="sr-only">
+                            <i class="fa-solid fa-bag-shopping text-saloon-600 mb-1 block text-lg"></i>
+                            <span class="text-xs font-bold text-saloon-950 block">Take-out</span>
+                            <span id="takeout-disabled-tag" class="hidden text-[9px] font-extrabold text-rose-600 uppercase block mt-0.5">Not Accepting</span>
+                        </label>
+                        <label id="option-delivery-label" class="border border-saloon-600 rounded-xl p-3 text-center cursor-pointer hover:border-brass has-[:checked]:border-brass has-[:checked]:bg-parchment-dark transition relative">
+                            <input type="radio" id="radio-delivery" name="order_type" value="Delivery" onchange="handleOrderTypeChange('Delivery')" required class="sr-only">
+                            <i class="fa-solid fa-motorcycle text-saloon-600 mb-1 block text-lg"></i>
+                            <span class="text-xs font-bold text-saloon-950 block">Delivery</span>
+                            <span id="delivery-disabled-tag" class="hidden text-[9px] font-extrabold text-rose-600 uppercase block mt-0.5">Not Accepting</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Conditional Inputs based on Order Type -->
+                <div id="conditional-fields" class="space-y-4">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Payment Method Options -->
+                <div>
+                    <label class="block text-xs font-bold text-saloon-900 uppercase mb-2">Payment Method *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="border border-saloon-600 rounded-xl p-3.5 cursor-pointer hover:border-brass has-[:checked]:border-brass has-[:checked]:bg-parchment-dark transition flex items-start gap-3">
+                            <input type="radio" name="payment_method" value="Over-the-counter" onchange="handlePaymentMethodChange('Over-the-counter')" required class="mt-1">
+                            <div>
+                                <span class="text-xs font-bold text-saloon-950 block">Over-the-Counter</span>
+                                <span class="text-[11px] text-saloon-700">Pay at counter or prepare cash for delivery.</span>
+                            </div>
+                        </label>
+                        <label class="border border-saloon-600 rounded-xl p-3.5 cursor-pointer hover:border-brass has-[:checked]:border-brass has-[:checked]:bg-parchment-dark transition flex items-start gap-3">
+                            <input type="radio" name="payment_method" value="GCash" onchange="handlePaymentMethodChange('GCash')" required class="mt-1">
+                            <div>
+                                <span class="text-xs font-bold text-saloon-950 block">GCash Payment</span>
+                                <span class="text-[11px] text-saloon-700">Transfer directly via GCash number.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Payment Instructions / Reminders -->
+                <div id="payment-instructions" class="p-4 rounded-xl bg-parchment-dark border border-saloon-600 text-xs text-saloon-900 space-y-1">
+                    <p class="font-bold text-saloon-950"><i class="fa-solid fa-circle-info mr-1 text-brass-dark"></i> Payment Instructions:</p>
+                    <p id="payment-note-text">Select a payment method above to view instructions.</p>
+                </div>
+
+                <button type="submit" id="submit-order-btn" class="w-full bg-saloon-900 hover:bg-saloon-800 text-brass-light font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 border border-brass-dark">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>Place Order</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ORDER FINAL CONFIRMATION MODAL -->
+    <div id="confirm-order-modal" class="fixed inset-0 z-[60] overflow-y-auto hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+        <div class="bg-parchment rounded-2xl max-w-md w-full p-6 text-center shadow-2xl border-2 border-saloon-800 space-y-4">
+            <div class="w-14 h-14 bg-saloon-900 text-brass-light rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner border border-brass">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <div>
+                <h3 class="font-rye text-xl text-saloon-950">Is this your complete order?</h3>
+                <p class="text-xs text-saloon-700 mt-1.5 leading-relaxed">
+                    Would you like to place this order now, or keep your items in the saddle bag and add more coffee or food?
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="keepCartAndAddMore()" class="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-parchment-dark hover:bg-parchment text-saloon-950 border border-saloon-600 transition">
+                    <i class="fa-solid fa-cart-plus mr-1"></i> Add More Items
+                </button>
+                <button onclick="proceedWithOrderSubmission()" class="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-saloon-900 hover:bg-saloon-800 text-brass-light transition shadow">
+                    <i class="fa-solid fa-check mr-1"></i> Yes, Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POST-ORDER PAYMENT INSTRUCTION MODAL -->
+    <div id="payment-notice-modal" class="fixed inset-0 z-[70] overflow-y-auto hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="bg-parchment rounded-2xl max-w-md w-full p-6 text-center shadow-2xl border-2 border-brass-dark space-y-4">
+            <div id="payment-notice-icon" class="w-16 h-16 bg-saloon-900 text-brass-light rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner border border-brass">
+                <i class="fa-solid fa-store"></i>
+            </div>
+            <div>
+                <h3 id="payment-notice-title" class="font-rye text-xl text-saloon-950">Payment Action Required!</h3>
+                <p id="payment-notice-body" class="text-xs text-saloon-700 mt-2 leading-relaxed">
+                    <!-- Populated dynamically based on OTC vs GCash -->
+                </p>
+            </div>
+            <button onclick="dismissPaymentNoticeAndShowTracker()" class="w-full py-3.5 px-4 rounded-xl text-xs font-bold bg-saloon-900 hover:bg-saloon-800 text-brass-light transition shadow-lg flex items-center justify-center gap-2 border border-brass">
+                <span>Understood & Continue to Live Order</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-saloon-950 text-brass-light py-10 mt-auto border-t-4 border-brass-dark">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 gap-8 text-center sm:text-left">
+            <div>
+                <h3 class="font-rye text-lg text-brass mb-2">EL BARAKO CAFE</h3>
+                <p class="text-xs text-brass-light/70">Authentic Wild West saloon coffee experience in Baler, Aurora. Serving handcrafted coffee, gourmet snacks, waffles, and specialty meals daily.</p>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-brass mb-3">Contact & Hotline</h4>
+                <p class="text-xs text-brass-light/80 mb-1"><i class="fa-solid fa-phone mr-2 text-brass"></i> 0966 418 9662</p>
+                <p class="text-xs text-brass-light/80"><i class="fa-solid fa-clock mr-2 text-brass"></i> Open Daily: 11:00 AM - 9:00 PM</p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-saloon-800 text-center text-xs text-brass-light/50">
+            &copy; 2024 - 2026 EL BARAKO CAFE (Baler, Aurora). All rights reserved.
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC & SUPABASE INTEGRATION -->
+    <script>
+        // --- 1. SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = "https://kgxrdxbysdnwcuwppils.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_cG_oCE-x0_jLxOvCq6cblA_7fE3nvXU";
+        
+        let supabaseClient = null;
+
+        function initSupabase() {
+            try {
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    return true;
+                }
+            } catch (e) {
+                console.warn("Supabase initialization deferred:", e);
+            }
+            return false;
+        }
+
+        // --- 2. CONFIGURATION STATE ---
+        let isStoreOpen = true; 
+        let acceptTakeout = true; 
+        let acceptDelivery = true; 
+        const CAFE_CONTACT = "0966 418 9662";
+        const GCASH_NUMBER = "09664189662";
+        const GCASH_NAME = "JH****N T.";
+
+        let cart = [];
+        let currentActiveOrder = null;
+        let pendingOrderRecord = null;
+        let menuAvailabilityMap = {};
+
+        // --- 3. COMPLETE MENU DATASET WITH TEXT DESCRIPTIONS ---
+        const menuData = {
+            "Latte": [
+                { id: "latte-1", name: "Americano", desc: "Rich double shot of dark roasted espresso cut with hot or chilled mineral water.", priceHot: 115, priceIced: 125, hasVariant: true, category: "Latte" },
+                { id: "latte-2", name: "Cappuccino / Café Latte", desc: "Smooth espresso folded into velvety steamed milk with a rich layer of microfoam.", priceHot: 145, priceIced: 155, hasVariant: true, category: "Latte" },
+                { id: "latte-3", name: "Caramel Macchiato", desc: "Layered fresh espresso, steamed milk, and vanilla, finished with custom caramel drizzle.", priceHot: 155, priceIced: 165, hasVariant: true, category: "Latte" },
+                { id: "latte-4", name: "Hazelnut Latte", desc: "Aromatic nutty hazelnut syrup blended seamlessly into rich espresso and fresh milk.", priceHot: 155, priceIced: 165, hasVariant: true, category: "Latte" },
+                { id: "latte-5", name: "Spanish Latte", desc: "Sweetened condensed milk combined with bold espresso shots for a rich, creamy kick.", priceHot: 155, priceIced: 165, hasVariant: true, category: "Latte" },
+                { id: "latte-6", name: "Roasted Almond Latte", desc: "Warm roasted almond notes folded into full-cream milk and signature espresso.", priceHot: 155, priceIced: 165, hasVariant: true, category: "Latte" },
+                { id: "latte-7", name: "Biscoff Latte", priceHot: 165, priceIced: 175, desc: "Creamy espresso infused with spiced Biscoff cookie spread and topped with cookie crumbs.", hasVariant: true, category: "Latte" }
+            ],
+            "Premium Coffee": [
+                { id: "prem-1", name: "Chocolate Chip Cookie Latte", desc: "Decadent cookie butter espresso topped with cocoa dust and cookie crumbles.", price: 180, category: "Premium Coffee" },
+                { id: "prem-2", name: "Einspanner Latte", desc: "Classic Viennese-style espresso topped with a thick layer of cold sweet cream.", price: 185, category: "Premium Coffee" },
+                { id: "prem-3", name: "Mocacao Latte", desc: "Dark cocoa meets rich signature espresso and velvet whole milk.", price: 180, category: "Premium Coffee" },
+                { id: "prem-4", name: "Tiramisu Latte", desc: "Inspired by the classic Italian dessert with mascarpone cream notes and cocoa.", price: 185, category: "Premium Coffee" }
+            ],
+            "Frappe": [
+                { id: "frap-1", name: "Oreo Cheesecake", desc: "Blended cream frappe infused with crushed Oreos and savory cheesecake bites.", price: 170, category: "Frappe" },
+                { id: "frap-2", name: "Choco Java Chips", desc: "Blended coffee frappe packed with chocolate chips and topped with whipped cream.", price: 175, category: "Frappe" },
+                { id: "frap-3", name: "Biscoff Frappe", desc: "Rich blended ice frappe with authentic Speculoos Biscoff butter and crunch.", price: 185, category: "Frappe" },
+                { id: "frap-4", name: "Salted Caramel", desc: "Sweet & salty caramel ice blend topped with golden caramel drizzle.", price: 170, category: "Frappe" },
+                { id: "frap-5", name: "Strawberry Cream", desc: "Refreshing non-coffee strawberry fruit frappe blended with milk and whip.", price: 170, category: "Frappe" },
+                { id: "frap-6", name: "Strawberry Matcha", desc: "Layered Japanese Uji matcha frappe over sweet strawberry compote.", price: 185, category: "Frappe" },
+                { id: "frap-7", name: "Matcha Frappe", desc: "Traditional green tea matcha blended smoothly with crushed ice and cream.", price: 185, category: "Frappe" }
+            ],
+            "Ice Cream Coffee": [
+                { id: "ic-1", name: "EL Barako Affogato", desc: "A double shot of piping hot barako espresso poured over vanilla bean ice cream.", price: 185, category: "Ice Cream Coffee" },
+                { id: "ic-2", name: "Choco Lava Latte", desc: "Rich iced mocha topped with a scoop of chocolate ice cream and lava drizzle.", price: 185, category: "Ice Cream Coffee" },
+                { id: "ic-3", name: "Double Dirty Matcha", desc: "Matcha green tea latte spiced with a shot of espresso and ice cream scoop.", price: 185, category: "Ice Cream Coffee" },
+                { id: "ic-4", name: "Banana Pudding Latte", desc: "Signature iced coffee topped with rich handmade banana pudding ice cream.", price: 195, category: "Ice Cream Coffee" },
+                { id: "ic-5", name: "Banana Pudding Matcha", desc: "Authentic matcha latte elevated with a scoop of signature banana pudding ice cream.", price: 195, category: "Ice Cream Coffee" }
+            ],
+            "Non-Coffee": [
+                { id: "nc-1", name: "Milky Blueberry", desc: "Sweet blueberry fruit preserves layered with cold fresh milk.", price: 155, category: "Non-Coffee" },
+                { id: "nc-2", name: "Milky Strawberry", desc: "Real strawberry bits paired with smooth cold farm milk.", price: 155, category: "Non-Coffee" },
+                { id: "nc-3", name: "Milky Hershey", desc: "Classic Hershey's chocolate syrup whisked into iced whole milk.", price: 155, category: "Non-Coffee" },
+                { id: "nc-4", name: "Choco ala Barako", desc: "Rich house-blend cocoa beverage served piping hot or ice-chilled.", priceHot: 145, priceIced: 155, hasVariant: true, category: "Non-Coffee" },
+                { id: "nc-5", name: "Matcha Latte", desc: "Pure grade matcha whisked with warm or cold velvety milk.", price: 165, category: "Non-Coffee" }
+            ],
+            "Soda Series": [
+                { id: "soda-1", name: "Passion Pop", desc: "Sparkling soda infused with tropical passion fruit puree and mint.", price: 145, category: "Soda Series" },
+                { id: "soda-2", name: "Fizzy Lychee", desc: "Bubbly soda pop flavored with sweet aromatic lychee juice.", price: 145, category: "Soda Series" },
+                { id: "soda-3", name: "Lychee Yakult", desc: "Fizzy lychee soda combined with tangy probiotic Yakult.", price: 155, category: "Soda Series" },
+                { id: "soda-4", name: "Sparkly Blueberry", desc: "Ice-cold sparkling water mixed with sweet blueberry syrup.", price: 145, category: "Soda Series" },
+                { id: "soda-5", name: "Sparkly Strawberry", desc: "Refreshing fizzy soda blended with real strawberry bits.", price: 145, category: "Soda Series" },
+                { id: "soda-6", name: "Mixed Berries", desc: "Wildberry sparkling soda packed with strawberry and blueberry notes.", price: 145, category: "Soda Series" },
+                { id: "soda-7", name: "Green Apple Soda", desc: "Tangy green apple sparkling cooler served over crushed ice.", price: 145, category: "Soda Series" }
+            ],
+            "Fruit Juice": [
+                { id: "fj-1", name: "Lemon Iced Tea", desc: "Freshly brewed iced black tea spiced with natural citrus lemon.", price: 105, category: "Fruit Juice" },
+                { id: "fj-2", name: "Orange Juice", desc: "Classic citrus orange fruit juice served ice-cold.", price: 105, category: "Fruit Juice" },
+                { id: "fj-3", name: "Pink Lemonade", desc: "Sweet and sour pink lemon beverage for instant refreshment.", price: 105, category: "Fruit Juice" },
+                { id: "fj-4", name: "Yakult Lemonade", desc: "Fresh lemonade blended with sweet probiotic Yakult milk.", price: 135, category: "Fruit Juice" },
+                { id: "fj-5", name: "Cucumber Lemonade", desc: "Cooling cucumber juice paired with freshly squeezed lemon.", price: 105, category: "Fruit Juice" }
+            ],
+            "Add-Ons": [
+                { id: "ao-1", name: "Espresso Shot", desc: "Extra double shot of dark barako espresso.", price: 30, category: "Add-Ons" },
+                { id: "ao-2", name: "Whipped Cream", desc: "Fluffy rich whipped cream topping.", price: 25, category: "Add-Ons" },
+                { id: "ao-3", name: "Milk", desc: "Extra serving of fresh whole milk.", price: 20, category: "Add-Ons" },
+                { id: "ao-4", name: "Flavored Syrup", desc: "Vanilla, Caramel, or Hazelnut shot.", price: 20, category: "Add-Ons" },
+                { id: "ao-5", name: "Sea Salt Cream", desc: "Savory sweet sea salt cream foam.", price: 25, category: "Add-Ons" },
+                { id: "ao-6", name: "Sugar Syrup", desc: "Extra simple sugar sweetener.", price: 20, category: "Add-Ons" },
+                { id: "ao-7", name: "Ice Cream Scoop", desc: "Creamy vanilla ice cream scoop.", price: 30, category: "Add-Ons" },
+                { id: "ao-8", name: "Banana Pudding Scoop", desc: "House special banana pudding scoop.", price: 40, category: "Add-Ons" }
+            ],
+            "Waffle": [
+                { id: "wf-1", name: "Cookies and Cream", desc: "Golden thick Belgian waffle dusted with crushed Oreos and chocolate drip.", price: 169, category: "Waffle" },
+                { id: "wf-2", name: "Hersey Almond", desc: "Fresh waffle drenched in Hershey's chocolate sauce and toasted almonds.", price: 169, category: "Waffle" },
+                { id: "wf-3", name: "Chips Ahoy", desc: "Crispy waffle topped with chocolate chip cookie crumbles and whip.", price: 179, category: "Waffle" },
+                { id: "wf-4", name: "Biscoff Overload", desc: "Warm waffle smothered in Lotus Biscoff spread and crushed cookies.", price: 179, category: "Waffle" },
+                { id: "wf-5", name: "Classic Buttermilk", desc: "Traditional fluffy golden waffle served with real butter and maple syrup.", price: 169, category: "Waffle" }
+            ],
+            "Messy Donuts": [
+                { id: "dn-1", name: "Choco Delight (12 pcs / 2 flavors)", desc: "12 mini bite-sized messy donuts loaded with dark chocolate glaze.", price: 189, category: "Messy Donuts" },
+                { id: "dn-2", name: "Milky Vanilla (12 pcs / 2 flavors)", desc: "12 mini donuts dusted with sweet vanilla milk powder.", price: 189, category: "Messy Donuts" },
+                { id: "dn-3", name: "Velvet Ube (12 pcs / 2 flavors)", desc: "12 mini donuts coated in creamy purple ube velvet glaze.", price: 189, category: "Messy Donuts" }
+            ],
+            "Appetizer": [
+                { id: "app-1", name: "Crispy Potato Chips", desc: "Thin slice hand-cut potato chips fried golden and seasoned.", price: 169, category: "Appetizer" },
+                { id: "app-2", name: "Green Salad", desc: "Fresh garden greens, cherry tomatoes, and cucumber in vinaigrette.", price: 189, category: "Appetizer" },
+                { id: "app-3", name: "Lumpiang Shanghai", desc: "Crispy fried Filipino spring rolls filled with seasoned minced pork.", price: 175, category: "Appetizer" },
+                { id: "app-4", name: "Fries and Wedges", desc: "Combo basket of seasoned French fries and thick potato wedges.", price: 179, category: "Appetizer" }
+            ],
+            "Pasta": [
+                { id: "pas-1", name: "Spinach Penne", desc: "Penne pasta tossed in a creamy spinach and garlic parmesan sauce.", price: 220, category: "Pasta" },
+                { id: "pas-2", name: "Chicken Pesto", desc: "Al dente pasta coated in fresh basil pesto with grilled chicken strips.", price: 220, category: "Pasta" },
+                { id: "pas-3", name: "Meatball Pasta", desc: "Hearty Italian marinara pasta topped with savory beef meatballs.", price: 220, category: "Pasta" },
+                { id: "pas-4", name: "Beef Lasagna Rolls", desc: "Rolled lasagna pasta sheets layered with ground beef and melted mozzarella.", price: 220, category: "Pasta" },
+                { id: "pas-5", name: "Classic Carbonara", desc: "Creamy white pasta sauce topped with crispy bacon bits and parmesan.", price: 220, category: "Pasta" }
+            ],
+            "Snacks": [
+                { id: "snk-1", name: "Fish Tofu Squares", desc: "Golden fried savory fish tofu cubes served with dip.", price: 205, category: "Snacks" },
+                { id: "snk-2", name: "Chicken Fingers", desc: "Crispy breaded tender chicken strips with honey mustard dip.", price: 205, category: "Snacks" },
+                { id: "snk-3", name: "Loaded Nachos", desc: "Tortilla chips stacked with cheese sauce, ground beef, and jalapeños.", price: 205, category: "Snacks" },
+                { id: "snk-4", name: "Beef Quesadilla", desc: "Toasted tortilla stuffed with seasoned minced beef and melted cheese.", price: 205, category: "Snacks" },
+                { id: "snk-5", name: "ELBarako Mix (onion rings + mojos + cheese sticks)", desc: "Ultimate snack platter with onion rings, potato mojos, and cheese sticks.", price: 205, category: "Snacks" }
+            ],
+            "Sandwich": [
+                { id: "sw-1", name: "Deli Sandwich", desc: "Toasted bread layered with ham, cheese, lettuce, and fresh tomatoes.", price: 179, category: "Sandwich" },
+                { id: "sw-2", name: "Chicken BBQ", desc: "Shredded chicken in smoky barbecue sauce served on artisan bread.", price: 189, category: "Sandwich" },
+                { id: "sw-3", name: "Clubhouse", desc: "Triple-decker sandwich packed with bacon, egg, chicken, and cheese.", price: 179, category: "Sandwich" },
+                { id: "sw-4", name: "Monte Cristo", desc: "French toasted ham and cheese sandwich dusted with powdered sugar.", price: 189, category: "Sandwich" }
+            ],
+            "Rice Bowl": [
+                { id: "rb-1", name: "Spam Musubi", desc: "Grilled Spam glazed in sweet soy sauce over white rice wrapped in nori.", price: 189, category: "Rice Bowl" },
+                { id: "rb-2", name: "Tapa de Baka", desc: "Tender cured beef tapa served with garlic rice and fried egg.", price: 189, category: "Rice Bowl" },
+                { id: "rb-3", name: "Pork Katsu", desc: "Breaded pork cutlet served over steamed rice with savory katsu sauce.", price: 179, category: "Rice Bowl" },
+                { id: "rb-4", name: "Chicken Katsu", desc: "Crispy breaded chicken fillet served with Japanese curry or katsu sauce.", price: 179, category: "Rice Bowl" },
+                { id: "rb-5", name: "Burger Steak", desc: "Juicy beef patty topped with rich mushroom gravy and fried egg.", price: 169, category: "Rice Bowl" },
+                { id: "rb-6", name: "Pork Belly", desc: "Slow-cooked crispy pork belly bites served over warm garlic rice.", price: 189, category: "Rice Bowl" }
+            ],
+            "Solo Order": [
+                { id: "so-1", name: "Bang Bang Shrimp", desc: "Crispy fried shrimp tossed in spicy sweet chili bang bang sauce.", price: 275, category: "Solo Order" },
+                { id: "so-2", name: "Western Spicy Chicken", desc: "Crispy fried chicken seasoned with spicy cayenne western rub.", price: 265, category: "Solo Order" },
+                { id: "so-3", name: "Fish 'n Chips", desc: "Golden fried white fish fillets served with crispy potato fries and tartar sauce.", price: 269, category: "Solo Order" }
+            ],
+            "Pizza": [
+                { id: "pz-1", name: "Hawaiian", desc: "Classic pizza topped with sweet pineapple chunks, ham, and mozzarella.", price: 320, category: "Pizza" },
+                { id: "pz-2", name: "Pepperoni", desc: "Loaded with sliced beef pepperoni and rich tomato cheese sauce.", price: 320, category: "Pizza" },
+                { id: "pz-3", name: "Bacon Spinach", desc: "Creamy white sauce pizza topped with bacon bits and fresh spinach.", price: 330, category: "Pizza" },
+                { id: "pz-4", name: "Triple Cheese", desc: "Gourmet cheese lover's blend of mozzarella, cheddar, and parmesan.", price: 320, category: "Pizza" }
+            ]
+        };
+
+        let activeCategory = Object.keys(menuData)[0];
+
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            renderCategoryTabs();
+            renderMenu();
+            updateCartBadge();
+
+            if (!initSupabase()) {
+                setTimeout(async () => {
+                    initSupabase();
+                    if (supabaseClient) {
+                        await fetchStoreStatus();
+                        await fetchMenuAvailability();
+                        setupRealtimeSubscriptions();
+                    } else {
+                        updateStoreStatusUI(true);
+                    }
+                }, 300);
+            } else {
+                await fetchStoreStatus();
+                await fetchMenuAvailability();
+                setupRealtimeSubscriptions();
+            }
+        });
+
+        // Fetch Store Status
+        async function fetchStoreStatus() {
+            if (!supabaseClient) return;
+            try {
+                const { data } = await supabaseClient.from('store_settings').select('*');
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        if (row.setting_key === 'is_open') isStoreOpen = (row.setting_value === 'true' || row.setting_value === true);
+                        if (row.setting_key === 'accept_takeout') acceptTakeout = (row.setting_value === 'true' || row.setting_value === true);
+                        if (row.setting_key === 'accept_delivery') acceptDelivery = (row.setting_value === 'true' || row.setting_value === true);
+                    });
+                    updateStoreStatusUI(isStoreOpen);
+                    updateOrderTypeSelectorsUI();
+                } else {
+                    updateStoreStatusUI(true);
+                }
+            } catch (err) {
+                console.warn("Store settings fetch warning:", err);
+                updateStoreStatusUI(true);
+            }
+        }
+
+        // Fetch Menu Availability
+        async function fetchMenuAvailability() {
+            if (!supabaseClient) return;
+            try {
+                const { data } = await supabaseClient.from('menu_items').select('item_id, is_available');
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        menuAvailabilityMap[row.item_id] = row.is_available;
+                    });
+                    renderMenu();
+                }
+            } catch (err) {
+                console.warn("Menu availability fetch warning:", err);
+            }
+        }
+
+        // Realtime Subscriptions & HTTP Polling
+        function setupRealtimeSubscriptions() {
+            if (!supabaseClient) return;
+
+            try {
+                const settingsChannel = supabaseClient.channel('realtime_store_settings');
+                if (settingsChannel && typeof settingsChannel.on === 'function') {
+                    settingsChannel
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
+                            if (payload.new) {
+                                if (payload.new.setting_key === 'is_open') {
+                                    const isOpen = (payload.new.setting_value === 'true' || payload.new.setting_value === true);
+                                    updateStoreStatusUI(isOpen);
+                                    showNotification(`Store status updated to ${isOpen ? 'OPEN' : 'CLOSED'}`, isOpen ? 'success' : 'error');
+                                }
+                                if (payload.new.setting_key === 'accept_takeout') {
+                                    acceptTakeout = (payload.new.setting_value === 'true' || payload.new.setting_value === true);
+                                    updateOrderTypeSelectorsUI();
+                                }
+                                if (payload.new.setting_key === 'accept_delivery') {
+                                    acceptDelivery = (payload.new.setting_value === 'true' || payload.new.setting_value === true);
+                                    updateOrderTypeSelectorsUI();
+                                }
+                            }
+                        });
+                    
+                    try { settingsChannel.subscribe(); } catch (e) {}
+                }
+
+                const menuChannel = supabaseClient.channel('realtime_menu_items');
+                if (menuChannel && typeof menuChannel.on === 'function') {
+                    menuChannel
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, payload => {
+                            if (payload.new && payload.new.item_id) {
+                                menuAvailabilityMap[payload.new.item_id] = payload.new.is_available;
+                                renderMenu();
+                            }
+                        });
+
+                    try { menuChannel.subscribe(); } catch (e) {}
+                }
+
+                const ordersChannel = supabaseClient.channel('realtime_orders');
+                if (ordersChannel && typeof ordersChannel.on === 'function') {
+                    ordersChannel
+                        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+                            if (currentActiveOrder && payload.new && (payload.new.order_id === currentActiveOrder.order_id || payload.new.id === currentActiveOrder.id)) {
+                                currentActiveOrder.status = payload.new.status;
+                                renderConfirmationView(currentActiveOrder);
+                                showNotification(`Order Status Updated: ${payload.new.status}`, 'success');
+                            }
+                        });
+
+                    try { ordersChannel.subscribe(); } catch (e) {}
+                }
+            } catch (err) {}
+
+            // Reliable 3-second HTTP Polling Fallback
+            setInterval(async () => {
+                await fetchStoreStatus();
+                await fetchMenuAvailability();
+
+                if (currentActiveOrder && supabaseClient) {
+                    try {
+                        const { data } = await supabaseClient
+                            .from('orders')
+                            .select('*')
+                            .eq('order_id', currentActiveOrder.order_id)
+                            .maybeSingle();
+
+                        if (data && data.status && data.status !== currentActiveOrder.status) {
+                            currentActiveOrder.status = data.status;
+                            renderConfirmationView(currentActiveOrder);
+                            showNotification(`Order Status Updated: ${data.status}`, 'success');
+                        }
+                    } catch (e) {}
+                }
+            }, 3000);
+        }
+
+        function updateStoreStatusUI(isOpen) {
+            isStoreOpen = isOpen;
+            const badge = document.getElementById('store-status-badge');
+            const dot = document.getElementById('store-status-dot');
+            const text = document.getElementById('store-status-text');
+            const banner = document.getElementById('store-closed-banner');
+
+            if (badge && dot && text && banner) {
+                if (isOpen) {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm bg-green-900 text-green-200 border border-green-700";
+                    dot.className = "w-2 h-2 rounded-full animate-pulse bg-green-400";
+                    text.innerText = "Open - Accepting Orders";
+                    banner.classList.add('hidden');
+                } else {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm bg-red-900 text-red-200 border border-red-700";
+                    dot.className = "w-2 h-2 rounded-full animate-pulse bg-red-400";
+                    text.innerText = "Store Closed";
+                    banner.classList.remove('hidden');
+                }
+            }
+        }
+
+        function updateOrderTypeSelectorsUI() {
+            const takeoutLabel = document.getElementById('option-takeout-label');
+            const takeoutRadio = document.getElementById('radio-takeout');
+            const takeoutTag = document.getElementById('takeout-disabled-tag');
+
+            const deliveryLabel = document.getElementById('option-delivery-label');
+            const deliveryRadio = document.getElementById('radio-delivery');
+            const deliveryTag = document.getElementById('delivery-disabled-tag');
+
+            if (takeoutLabel && takeoutRadio && takeoutTag) {
+                if (acceptTakeout) {
+                    takeoutRadio.disabled = false;
+                    takeoutLabel.classList.remove('opacity-40', 'bg-saloon-900/10', 'cursor-not-allowed');
+                    takeoutTag.classList.add('hidden');
+                } else {
+                    takeoutRadio.disabled = true;
+                    if (takeoutRadio.checked) takeoutRadio.checked = false;
+                    takeoutLabel.classList.add('opacity-40', 'bg-saloon-900/10', 'cursor-not-allowed');
+                    takeoutTag.classList.remove('hidden');
+                }
+            }
+
+            if (deliveryLabel && deliveryRadio && deliveryTag) {
+                if (acceptDelivery) {
+                    deliveryRadio.disabled = false;
+                    deliveryLabel.classList.remove('opacity-40', 'bg-saloon-900/10', 'cursor-not-allowed');
+                    deliveryTag.classList.add('hidden');
+                } else {
+                    deliveryRadio.disabled = true;
+                    if (deliveryRadio.checked) deliveryRadio.checked = false;
+                    deliveryLabel.classList.add('opacity-40', 'bg-saloon-900/10', 'cursor-not-allowed');
+                    deliveryTag.classList.remove('hidden');
+                }
+            }
+        }
+
+        // --- VIEW ROUTING ---
+        function switchView(viewName) {
+            document.getElementById('view-menu')?.classList.add('hidden');
+            document.getElementById('view-tracker')?.classList.add('hidden');
+            document.getElementById('view-confirmation')?.classList.add('hidden');
+
+            if (viewName === 'menu') {
+                document.getElementById('view-menu')?.classList.remove('hidden');
+            } else if (viewName === 'tracker') {
+                document.getElementById('view-tracker')?.classList.remove('hidden');
+            } else if (viewName === 'confirmation') {
+                document.getElementById('view-confirmation')?.classList.remove('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- MENU RENDERING ---
+        function renderCategoryTabs() {
+            const container = document.getElementById('category-tabs');
+            if (!container) return;
+            container.innerHTML = Object.keys(menuData).map(cat => `
+                <button onclick="setActiveCategory('${cat}')" class="px-3 py-2 rounded-lg text-xs font-semibold text-left whitespace-nowrap transition flex items-center justify-between ${activeCategory === cat ? 'bg-saloon-900 text-brass-light shadow-sm' : 'text-saloon-800 hover:bg-parchment hover:text-saloon-950'}">
+                    <span>${cat}</span>
+                    <span class="text-[10px] opacity-70 ml-2">(${menuData[cat].length})</span>
+                </button>
+            `).join('');
+        }
+
+        function setActiveCategory(cat) {
+            activeCategory = cat;
+            renderCategoryTabs();
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('menu-grid');
+            if (!grid) return;
+            const searchInput = document.getElementById('menu-search');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            let itemsToDisplay = [];
+            if (searchTerm.trim() !== "") {
+                Object.values(menuData).forEach(catList => {
+                    catList.forEach(item => {
+                        if (item.name.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm)) {
+                            itemsToDisplay.push(item);
+                        }
+                    });
+                });
+            } else {
+                itemsToDisplay = menuData[activeCategory] || [];
+            }
+
+            if (itemsToDisplay.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-saloon-600"><p class="text-xs">No menu items found.</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = itemsToDisplay.map(item => {
+                const isAvailable = menuAvailabilityMap[item.id] !== undefined ? menuAvailabilityMap[item.id] : true;
+                
+                if (item.hasVariant) {
+                    return `
+                        <div class="bg-parchment-dark rounded-xl p-4 border border-saloon-600/40 flex flex-col justify-between hover:border-saloon-600 transition group ${!isAvailable ? 'opacity-50 bg-parchment' : ''}">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[9px] font-semibold uppercase tracking-wider text-brass-dark">${item.category}</span>
+                                    ${!isAvailable ? `<span class="text-[9px] font-bold text-red-600 uppercase">Out of Stock</span>` : ''}
+                                </div>
+                                <h3 class="font-bold text-saloon-950 text-sm mt-1">${sanitizeHTML(item.name)}</h3>
+                                <p class="text-xs text-saloon-700 mt-1.5 leading-snug">${sanitizeHTML(item.desc || '')}</p>
+                            </div>
+                            <div class="mt-4 space-y-2 pt-3 border-t border-saloon-600/20">
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button ${!isAvailable ? 'disabled' : ''} onclick="addToCart('${item.id}', 'Hot', '${item.name}', ${item.priceHot})" class="bg-parchment hover:bg-white border border-saloon-600/40 rounded-lg p-1.5 text-center transition disabled:opacity-50">
+                                        <span class="block text-[9px] text-saloon-600 uppercase font-medium">Hot</span>
+                                        <span class="font-bold text-saloon-950 text-xs">₱${item.priceHot}</span>
+                                    </button>
+                                    <button ${!isAvailable ? 'disabled' : ''} onclick="addToCart('${item.id}', 'Iced', '${item.name}', ${item.priceIced})" class="bg-parchment hover:bg-white border border-saloon-600/40 rounded-lg p-1.5 text-center transition disabled:opacity-50">
+                                        <span class="block text-[9px] text-saloon-600 uppercase font-medium">Iced</span>
+                                        <span class="font-bold text-saloon-950 text-xs">₱${item.priceIced}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bg-parchment-dark rounded-xl p-4 border border-saloon-600/40 flex flex-col justify-between hover:border-saloon-600 transition group ${!isAvailable ? 'opacity-50 bg-parchment' : ''}">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[9px] font-semibold uppercase tracking-wider text-brass-dark">${item.category}</span>
+                                    ${!isAvailable ? `<span class="text-[9px] font-bold text-red-600 uppercase">Out of Stock</span>` : ''}
+                                </div>
+                                <h3 class="font-bold text-saloon-950 text-sm mt-1">${sanitizeHTML(item.name)}</h3>
+                                <p class="text-xs text-saloon-700 mt-1.5 leading-snug">${sanitizeHTML(item.desc || '')}</p>
+                            </div>
+                            <div class="mt-4 flex items-center justify-between pt-3 border-t border-saloon-600/20">
+                                <span class="font-bold text-saloon-950 text-sm">₱${item.price}</span>
+                                <button ${!isAvailable ? 'disabled' : ''} onclick="addToCart('${item.id}', 'Regular', '${item.name}', ${item.price})" class="bg-saloon-900 hover:bg-saloon-800 text-brass-light px-3 py-1.5 rounded-lg text-xs font-medium transition disabled:opacity-50 border border-brass-dark/40">
+                                    ${isAvailable ? 'Add' : 'Unavailable'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function filterMenu() {
+            renderMenu();
+        }
+
+        // --- CART MANAGEMENT ---
+        function addToCart(id, variant, name, price) {
+            if (!isStoreOpen) {
+                showNotification("Store is currently closed.", "error");
+                return;
+            }
+            const isAvailable = menuAvailabilityMap[id] !== undefined ? menuAvailabilityMap[id] : true;
+            if (!isAvailable) {
+                showNotification("This item is currently out of stock.", "error");
+                return;
+            }
+
+            const cartItemId = `${id}-${variant}`;
+            const existing = cart.find(i => i.cartItemId === cartItemId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ cartItemId, id, name, variant, price, quantity: 1 });
+            }
+            updateCartBadge();
+            showNotification(`Added ${name} (${variant}) to saddle bag!`, "success");
+        }
+
+        function updateQuantity(cartItemId, delta) {
+            const item = cart.find(i => i.cartItemId === cartItemId);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    cart = cart.filter(i => i.cartItemId !== cartItemId);
+                }
+            }
+            updateCartBadge();
+            renderCartItems();
+        }
+
+        function updateCartBadge() {
+            const count = cart.reduce((sum, i) => sum + i.quantity, 0);
+            const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            
+            const countBadge = document.getElementById('cart-count');
+            const floatingCountBadge = document.getElementById('floating-cart-count');
+            const floatingTotalBadge = document.getElementById('floating-cart-total');
+
+            if (countBadge) countBadge.innerText = count;
+            if (floatingCountBadge) floatingCountBadge.innerText = count;
+            if (floatingTotalBadge) floatingTotalBadge.innerText = `₱${total.toFixed(2)}`;
+        }
+
+        function openCartDrawer() {
+            renderCartItems();
+            document.getElementById('cart-drawer')?.classList.remove('hidden');
+        }
+
+        function closeCartDrawer() {
+            document.getElementById('cart-drawer')?.classList.add('hidden');
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items-container');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const totalEl = document.getElementById('cart-total');
+
+            if (!container || !subtotalEl || !totalEl) return;
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="py-12 text-center text-saloon-600"><i class="fa-solid fa-cart-arrow-down text-4xl mb-2"></i><p class="text-sm">Your saddle bag is empty.</p></div>`;
+                subtotalEl.innerText = "₱0.00";
+                totalEl.innerText = "₱0.00";
+                return;
+            }
+
+            let subtotal = 0;
+            container.innerHTML = cart.map(item => {
+                subtotal += item.price * item.quantity;
+                return `
+                    <div class="py-3 flex items-center justify-between gap-3">
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-saloon-950 text-sm">${sanitizeHTML(item.name)}</h4>
+                            <span class="text-xs text-saloon-700">Variant: ${item.variant} • ₱${item.price} each</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateQuantity('${item.cartItemId}', -1)" class="w-7 h-7 rounded-lg bg-parchment-dark hover:bg-parchment text-saloon-950 font-bold text-xs flex items-center justify-center border border-saloon-600/30">-</button>
+                            <span class="text-xs font-bold w-5 text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity('${item.cartItemId}', 1)" class="w-7 h-7 rounded-lg bg-parchment-dark hover:bg-parchment text-saloon-950 font-bold text-xs flex items-center justify-center border border-saloon-600/30">+</button>
+                        </div>
+                        <span class="font-bold text-saloon-950 text-sm w-16 text-right">₱${item.price * item.quantity}</span>
+                    </div>
+                `;
+            }).join('');
+
+            subtotalEl.innerText = `₱${subtotal.toFixed(2)}`;
+            totalEl.innerText = `₱${subtotal.toFixed(2)}`;
+        }
+
+        // --- CHECKOUT & CONDITIONAL FIELDS ---
+        function openCheckoutModal() {
+            if (!isStoreOpen) {
+                showNotification("We are temporarily closed. Please check back later or call 0966 418 9662 for inquiries.", "error");
+                return;
+            }
+            if (cart.length === 0) {
+                showNotification("Your saddle bag is empty.", "error");
+                return;
+            }
+            closeCartDrawer();
+            document.getElementById('checkout-modal')?.classList.remove('hidden');
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal')?.classList.add('hidden');
+        }
+
+        function handleOrderTypeChange(type) {
+            if (type === 'Take-out' && !acceptTakeout) {
+                showNotification("We are currently not accepting Take-out orders.", "error");
+                const radioTakeout = document.getElementById('radio-takeout');
+                if (radioTakeout) radioTakeout.checked = false;
+                return;
+            }
+            if (type === 'Delivery' && !acceptDelivery) {
+                showNotification("We are currently not accepting Delivery orders.", "error");
+                const radioDelivery = document.getElementById('radio-delivery');
+                if (radioDelivery) radioDelivery.checked = false;
+                return;
+            }
+
+            const container = document.getElementById('conditional-fields');
+            if (!container) return;
+
+            if (type === 'Dine-in') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-bold text-saloon-900 uppercase mb-1">Table Number *</label>
+                        <input type="text" id="order-table-num" required placeholder="e.g. Table 4" class="w-full px-4 py-2.5 bg-white border border-saloon-600 rounded-xl text-sm focus:ring-2 focus:ring-brass focus:outline-none">
+                    </div>
+                `;
+            } else if (type === 'Take-out') {
+                container.innerHTML = `
+                    <div class="p-3 bg-parchment-dark border border-saloon-600 rounded-xl text-xs text-saloon-900">
+                        <i class="fa-solid fa-ticket mr-1"></i> A unique claim number (e.g. <strong>EB-8821</strong>) will be automatically assigned for your take-out order.
+                    </div>
+                `;
+            } else if (type === 'Delivery') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-bold text-saloon-900 uppercase mb-1">Full Delivery Address *</label>
+                        <textarea id="order-delivery-address" required rows="2" placeholder="House/Unit No., Street, Barangay, City" class="w-full px-4 py-2.5 bg-white border border-saloon-600 rounded-xl text-sm focus:ring-2 focus:ring-brass focus:outline-none"></textarea>
+                    </div>
+                    <div class="p-3 bg-parchment-dark border border-saloon-600 rounded-xl text-xs text-saloon-900 space-y-1">
+                        <p class="font-bold"><i class="fa-solid fa-phone mr-1"></i> Delivery Confirmation Notice:</p>
+                        <p>Please call our hotline <strong>0966 418 9662</strong> for order confirmation.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function handlePaymentMethodChange(method) {
+            const noteText = document.getElementById('payment-note-text');
+            if (!noteText) return;
+
+            const selectedType = document.querySelector('input[name="order_type"]:checked')?.value;
+            
+            if (method === 'Over-the-counter') {
+                if (selectedType === 'Delivery') {
+                    noteText.innerText = "Please prepare exact cash payment when the delivery driver arrives.";
+                } else {
+                    noteText.innerText = "After successful order submission, please complete payment at the café counter.";
+                }
+            } else if (method === 'GCash') {
+                if (selectedType === 'Delivery') {
+                    noteText.innerText = `Please transfer funds to GCash (${GCASH_NUMBER}) and send your proof of payment / receipt screenshot to our GCash mobile number (${GCASH_NUMBER}) for confirmation.`;
+                } else {
+                    noteText.innerText = `Please transfer funds directly to GCash account: ${GCASH_NAME} (${GCASH_NUMBER}).`;
+                }
+            }
+        }
+
+        // --- PROMPT ORDER CONFIRMATION CHECK ---
+        function promptOrderConfirmation(e) {
+            e.preventDefault();
+            if (!isStoreOpen) {
+                showNotification("We are temporarily closed. Please check back later or call 0966 418 9662 for inquiries.", "error");
+                return;
+            }
+
+            const rawName = document.getElementById('cust-name')?.value || '';
+            const rawPhone = document.getElementById('cust-phone')?.value || '';
+
+            const phoneRegex = /^(09|\+639)\d{9}$/;
+            if (!phoneRegex.test(rawPhone.replace(/\s+/g, ''))) {
+                showNotification("Please enter a valid PH mobile number (e.g. 09664189662).", "error");
+                return;
+            }
+
+            const name = sanitizeHTML(rawName);
+            const phone = sanitizeHTML(rawPhone);
+            const orderTypeInput = document.querySelector('input[name="order_type"]:checked');
+            const paymentMethodInput = document.querySelector('input[name="payment_method"]:checked');
+
+            if (!orderTypeInput || !paymentMethodInput) {
+                showNotification("Please select order type and payment method.", "error");
+                return;
+            }
+
+            const orderType = orderTypeInput.value;
+            const paymentMethod = paymentMethodInput.value;
+
+            let tableNumber = null;
+            let deliveryAddress = null;
+            let claimNumber = null;
+
+            if (orderType === 'Dine-in') {
+                tableNumber = sanitizeHTML(document.getElementById('order-table-num')?.value || '');
+            } else if (orderType === 'Take-out') {
+                claimNumber = 'EB-' + Math.floor(1000 + Math.random() * 9000);
+            } else if (orderType === 'Delivery') {
+                deliveryAddress = sanitizeHTML(document.getElementById('order-delivery-address')?.value || '');
+            }
+
+            const orderId = 'EB-' + Math.floor(100000 + Math.random() * 900000);
+            const totalAmount = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+
+            pendingOrderRecord = {
+                order_id: orderId,
+                customer_name: name,
+                contact_number: phone,
+                order_type: orderType,
+                table_number: tableNumber,
+                claim_number: claimNumber,
+                delivery_address: deliveryAddress,
+                items: cart,
+                total_amount: totalAmount,
+                payment_method: paymentMethod,
+                status: 'Accepted'
+            };
+
+            document.getElementById('confirm-order-modal')?.classList.remove('hidden');
+        }
+
+        function keepCartAndAddMore() {
+            document.getElementById('confirm-order-modal')?.classList.add('hidden');
+            closeCheckoutModal();
+            showNotification("Cart items saved! Feel free to add more items.", "success");
+            switchView('menu');
+        }
+
+        // --- SUBMIT ORDER TO SUPABASE AFTER USER CONFIRMS ---
+        async function proceedWithOrderSubmission() {
+            document.getElementById('confirm-order-modal')?.classList.add('hidden');
+            if (!pendingOrderRecord) return;
+
+            const submitBtn = document.getElementById('submit-order-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting Order...`;
+            }
+
+            try {
+                if (supabaseClient) {
+                    const { error } = await supabaseClient.from('orders').insert([pendingOrderRecord]);
+                    if (error) {
+                        console.warn("Supabase insert warning:", error.message);
+                    }
+                }
+            } catch (err) {
+                console.error("Database connection exception:", err);
+            }
+
+            currentActiveOrder = pendingOrderRecord;
+            pendingOrderRecord = null;
+            cart = [];
+            updateCartBadge();
+            closeCheckoutModal();
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> Place Order`;
+            }
+
+            showNotification("Order submitted successfully!", "success");
+            showPaymentInstructionsModal(currentActiveOrder);
+        }
+
+        function showPaymentInstructionsModal(order) {
+            const modal = document.getElementById('payment-notice-modal');
+            const icon = document.getElementById('payment-notice-icon');
+            const title = document.getElementById('payment-notice-title');
+            const body = document.getElementById('payment-notice-body');
+
+            if (!modal || !icon || !title || !body) return;
+
+            if (order.payment_method === 'Over-the-counter') {
+                if (order.order_type === 'Delivery') {
+                    icon.innerHTML = `<i class="fa-solid fa-truck-ramp-box"></i>`;
+                    title.innerText = "Cash on Delivery Order";
+                    body.innerHTML = `Please prepare the exact cash amount of <strong class="text-brass-dark text-sm">₱${order.total_amount.toFixed(2)}</strong> when our delivery rider arrives.`;
+                } else {
+                    icon.innerHTML = `<i class="fa-solid fa-cash-register"></i>`;
+                    title.innerText = "Please Proceed to Counter!";
+                    body.innerHTML = `To start processing your order (ID: <strong class="text-saloon-950">${order.order_id}</strong>), <strong>please go directly to the café counter</strong> to pay <strong class="text-brass-dark text-sm">₱${order.total_amount.toFixed(2)}</strong>.`;
+                }
+            } else if (order.payment_method === 'GCash') {
+                icon.innerHTML = `<i class="fa-solid fa-mobile-screen-button text-blue-600"></i>`;
+                title.innerText = "GCash Payment Verification!";
+                body.innerHTML = `Please send total amount of <strong class="text-blue-900 text-sm">₱${order.total_amount.toFixed(2)}</strong> to GCash: <strong>${GCASH_NAME} (${GCASH_NUMBER})</strong>.<br><br>Show your GCash receipt at the counter (or send via SMS to 0966 418 9662 for delivery) to start kitchen preparation.`;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function dismissPaymentNoticeAndShowTracker() {
+            document.getElementById('payment-notice-modal')?.classList.add('hidden');
+            renderConfirmationView(currentActiveOrder);
+            switchView('confirmation');
+        }
+
+        // --- RENDER CONFIRMATION DETAILS ---
+        function renderConfirmationView(order) {
+            const container = document.getElementById('view-confirmation');
+            if (!container) return;
+
+            let finalStatusLabel = "Ready";
+            if (order.order_type === 'Dine-in') finalStatusLabel = "Serving";
+            else if (order.order_type === 'Take-out') finalStatusLabel = "Ready to claim";
+            else if (order.order_type === 'Delivery') finalStatusLabel = "Ready to deliver";
+
+            const statuses = ['Accepted', 'Preparing', finalStatusLabel];
+            let currentStatusIdx = 0;
+            if (order.status === 'Preparing') currentStatusIdx = 1;
+            else if (order.status === finalStatusLabel || order.status === 'Completed') currentStatusIdx = 2;
+
+            container.innerHTML = `
+                <div class="bg-parchment rounded-2xl p-6 sm:p-8 shadow-xl border-2 border-saloon-800 space-y-6">
+                    <div class="text-center pb-6 border-b border-saloon-600/30">
+                        <div class="w-16 h-16 bg-saloon-900 text-brass-light rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner border border-brass">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h2 class="font-rye text-2xl sm:text-3xl text-saloon-950">Order Successfully Placed!</h2>
+                        <p class="text-xs text-saloon-700 mt-1">Thank you for ordering with EL BARAKO CAFE.</p>
+                        <div class="mt-4 inline-block bg-saloon-950 text-brass-light px-4 py-1.5 rounded-full text-xs font-bold tracking-wider">
+                            Order ID: ${order.order_id}
+                        </div>
+                    </div>
+
+                    <!-- Live Order Status Tracker -->
+                    <div class="bg-parchment-dark p-6 rounded-2xl border border-saloon-600/40 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-saloon-900"><i class="fa-solid fa-satellite-dish mr-1 text-brass-dark"></i> Live Order Tracker</h3>
+                            <span class="text-xs font-extrabold text-saloon-950 bg-brass/40 border border-brass px-3 py-1 rounded-full animate-pulse">Status: ${order.status}</span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 pt-2">
+                            ${statuses.map((st, idx) => `
+                                <div class="text-center">
+                                    <div class="h-2 rounded-full mb-2 ${idx <= currentStatusIdx ? 'bg-brass' : 'bg-saloon-600/20'}"></div>
+                                    <span class="text-[11px] font-bold ${idx <= currentStatusIdx ? 'text-saloon-950' : 'text-saloon-600'}">${st}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    ${order.order_type === 'Take-out' ? `
+                        <div class="bg-parchment-dark border border-saloon-600 p-4 rounded-xl text-center space-y-1">
+                            <span class="text-xs uppercase font-bold text-saloon-900">Your Claim Number</span>
+                            <div class="font-rye text-3xl font-extrabold text-saloon-950 tracking-widest">${order.claim_number}</div>
+                            <p class="text-[11px] text-saloon-700">Please present this claim number at the counter when picking up.</p>
+                        </div>
+                    ` : ''}
+
+                    ${order.order_type === 'Delivery' ? `
+                        <div class="bg-parchment-dark border border-saloon-600 p-4 rounded-xl text-xs text-saloon-900 space-y-1">
+                            <p class="font-bold"><i class="fa-solid fa-phone mr-1"></i> Delivery Order Confirmation Notice:</p>
+                            <p>Please call our hotline <strong>0966 418 9662</strong> for order confirmation.</p>
+                        </div>
+                    ` : ''}
+
+                    ${order.payment_method === 'GCash' ? `
+                        <div class="bg-blue-50/80 border border-blue-200 p-6 rounded-2xl text-center space-y-4">
+                            <div class="flex items-center justify-center gap-2 text-blue-900 font-bold text-sm uppercase tracking-wide">
+                                <i class="fa-solid fa-mobile-screen-button"></i> GCash Payment Details
+                            </div>
+
+                            <!-- Account Details -->
+                            <div class="bg-white p-4 rounded-xl border border-blue-100 max-w-sm mx-auto text-left space-y-2 text-xs shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-stone-500 font-medium">Account Name:</span>
+                                    <span class="font-bold text-blue-950">${GCASH_NAME}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-stone-500 font-medium">GCash Number:</span>
+                                    <span class="font-bold text-blue-950">${GCASH_NUMBER}</span>
+                                </div>
+                                <button onclick="copyGcashNumber()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-copy"></i> Copy Account Number
+                                </button>
+                            </div>
+
+                            ${order.order_type === 'Delivery' ? `
+                                <div class="bg-blue-100/80 border border-blue-300 p-3.5 rounded-xl text-xs text-blue-950 font-medium space-y-1 text-center">
+                                    <p class="font-bold text-blue-900"><i class="fa-solid fa-receipt mr-1"></i> Delivery Proof of Payment Required:</p>
+                                    <p>Please send your GCash payment receipt screenshot to our GCash mobile number <strong>${GCASH_NUMBER}</strong> for payment verification.</p>
+                                </div>
+                            ` : `
+                                <p class="text-xs text-stone-600">Please send total amount <strong class="text-blue-900">₱${order.total_amount.toFixed(2)}</strong> via GCash to complete payment.</p>
+                            `}
+                        </div>
+                    ` : `
+                        <div class="bg-parchment-dark p-4 rounded-xl text-xs text-saloon-900 space-y-1 border border-saloon-600/30">
+                            <p class="font-bold text-saloon-950"><i class="fa-solid fa-wallet mr-1"></i> Over-the-Counter Payment</p>
+                            <p>${order.order_type === 'Delivery' ? 'Please prepare exact cash payment when the delivery driver arrives.' : 'Please complete payment directly at the café counter.'}</p>
+                        </div>
+                    `}
+
+                    <!-- Order Summary Details -->
+                    <div class="space-y-3 border-t border-saloon-600/20 pt-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-saloon-900">Order Summary</h4>
+                        <div class="divide-y divide-saloon-600/10 text-xs">
+                            <div class="py-2 flex justify-between"><span class="text-saloon-700">Customer Name</span><span class="font-bold text-saloon-950">${order.customer_name}</span></div>
+                            <div class="py-2 flex justify-between"><span class="text-saloon-700">Contact Number</span><span class="font-bold text-saloon-950">${order.contact_number || order.phone}</span></div>
+                            <div class="py-2 flex justify-between"><span class="text-saloon-700">Order Type</span><span class="font-bold text-saloon-950">${order.order_type} ${order.table_number ? `(${order.table_number})` : ''}</span></div>
+                            ${order.delivery_address ? `<div class="py-2 flex justify-between"><span class="text-saloon-700">Delivery Address</span><span class="font-bold text-saloon-950 text-right">${order.delivery_address}</span></div>` : ''}
+                        </div>
+
+                        <div class="bg-parchment-dark p-4 rounded-xl space-y-2 mt-4 border border-saloon-600/30">
+                            <div class="text-xs font-bold uppercase text-saloon-900 mb-2">Items Ordered</div>
+                            ${order.items.map(i => `
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-saloon-800">${i.quantity}x ${i.name} (${i.variant})</span>
+                                    <span class="font-bold text-saloon-950">₱${i.price * i.quantity}</span>
+                                </div>
+                            `).join('')}
+                            <div class="border-t border-saloon-600/20 pt-2 flex justify-between text-sm font-bold">
+                                <span>Total Amount</span>
+                                <span class="text-saloon-600">₱${order.total_amount.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="switchView('menu')" class="flex-grow bg-saloon-900 hover:bg-saloon-800 text-brass-light font-bold py-3 rounded-xl text-xs transition shadow border border-brass-dark">
+                            <i class="fa-solid fa-utensils mr-2"></i> Order More Items
+                        </button>
+                        <button onclick="switchView('tracker')" class="flex-grow bg-parchment-dark hover:bg-parchment text-saloon-950 font-bold py-3 rounded-xl text-xs transition border border-saloon-600">
+                            <i class="fa-solid fa-magnifying-glass mr-2"></i> Track Orders
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copyGcashNumber() {
+            const rawNumber = "09664189662";
+            
+            try {
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = rawNumber;
+                tempTextArea.style.position = 'fixed';
+                tempTextArea.style.left = '-999999px';
+                tempTextArea.style.top = '-999999px';
+                document.body.appendChild(tempTextArea);
+                tempTextArea.focus();
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+            } catch (err) {
+                console.warn("execCommand copy fallback executed:", err);
+            }
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(rawNumber).catch(() => {});
+            }
+
+            showNotification("GCash number copied to clipboard: 09664189662", "success");
+        }
+
+        // --- ORDER LOOKUP / SEARCH ---
+        async function searchOrder() {
+            const trackInput = document.getElementById('track-input');
+            const query = trackInput ? sanitizeHTML(trackInput.value.trim()) : '';
+            const resultsContainer = document.getElementById('tracker-results');
+
+            if (!resultsContainer) return;
+
+            if (!query) {
+                showNotification("Please enter an Order ID or phone number.", "error");
+                return;
+            }
+
+            resultsContainer.innerHTML = `<div class="text-center py-8 text-saloon-600"><i class="fa-solid fa-spinner animate-spin text-2xl"></i><p class="text-xs mt-2">Searching orders...</p></div>`;
+
+            let foundOrder = null;
+            if (currentActiveOrder && (currentActiveOrder.order_id === query || currentActiveOrder.contact_number === query || currentActiveOrder.phone === query || currentActiveOrder.claim_number === query)) {
+                foundOrder = currentActiveOrder;
+            } else if (supabaseClient) {
+                try {
+                    const { data } = await supabaseClient
+                        .from('orders')
+                        .select('*')
+                        .or(`order_id.eq.${query},contact_number.eq.${query},claim_number.eq.${query}`)
+                        .limit(1);
+
+                    if (data && data.length > 0) {
+                        foundOrder = data[0];
+                    }
+                } catch (err) {
+                    console.error("Supabase search error:", err);
+                }
+            }
+
+            if (!foundOrder) {
+                resultsContainer.innerHTML = `
+                    <div class="bg-parchment rounded-2xl p-8 text-center border-2 border-saloon-600 space-y-2">
+                        <i class="fa-solid fa-circle-exclamation text-3xl text-brass-dark"></i>
+                        <h4 class="font-bold text-saloon-950 text-base">No Order Found</h4>
+                        <p class="text-xs text-saloon-700">We couldn't find any order matching "${query}". Please verify your Order ID or phone number.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.innerHTML = `
+                <div class="bg-parchment rounded-2xl p-6 shadow-md border-2 border-saloon-600 space-y-4">
+                    <div class="flex justify-between items-center border-b border-saloon-600/20 pb-3">
+                        <div>
+                            <span class="text-xs text-saloon-600">Order ID</span>
+                            <h4 class="font-bold text-saloon-950 text-base">${foundOrder.order_id}</h4>
+                        </div>
+                        <span class="bg-brass/40 text-saloon-950 font-extrabold text-xs px-3 py-1 rounded-full uppercase border border-brass">Status: ${foundOrder.status}</span>
+                    </div>
+                    <div class="text-xs space-y-1.5">
+                        <p><strong class="text-saloon-900">Customer:</strong> ${foundOrder.customer_name}</p>
+                        <p><strong class="text-saloon-900">Order Type:</strong> ${foundOrder.order_type} ${foundOrder.table_number ? '(' + foundOrder.table_number + ')' : ''}</p>
+                        ${foundOrder.claim_number ? `<p><strong class="text-saloon-900">Claim Number:</strong> ${foundOrder.claim_number}</p>` : ''}
+                        <p><strong class="text-saloon-900">Payment:</strong> ${foundOrder.payment_method}</p>
+                        <p><strong class="text-saloon-900">Total Amount:</strong> ₱${Number(foundOrder.total_amount).toFixed(2)}</p>
+                    </div>
+                    <button onclick='renderConfirmationView(${JSON.stringify(foundOrder)}); switchView("confirmation");' class="w-full bg-saloon-900 hover:bg-saloon-800 text-brass-light font-bold py-2.5 rounded-xl text-xs transition shadow border border-brass-dark">
+                        View Live Details & Tracker
+                    </button>
+                </div>
+            `;
+        }
+
+        // --- SANITIZATION ---
+        function sanitizeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // --- NOTIFICATION TOAST ---
+        function showNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-50 px-5 py-3 rounded-xl shadow-xl text-xs font-bold text-white transition transform translate-y-0 ${type === 'success' ? 'bg-saloon-950 border-l-4 border-brass' : 'bg-red-900 border-l-4 border-red-500'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check text-brass' : 'fa-triangle-exclamation'} mr-2"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-5');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
